@@ -1,0 +1,39 @@
+
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'jacoco'
+
+group = 'com.polycom.analytics'
+version = '1.0.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+jacocoTestReport {    
+   reports {        
+       xml.enabled true
+       csv.enabled false
+       html.destination file("${buildDir}/jacocoReport")
+       }
+}
+
+apply plugin: 'org.sonarqube'
+
+sonarqube {
+    properties {
+        property "sonar.host.url", "http://172.21.110.68:8000"
+        property "sonar.projectVersion", version
+    }
+}
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+
+dependencies {    
+    compile 'org.slf4j:slf4j-api:1.7.25'
+    testCompile 'junit:junit:4.12'
+}
