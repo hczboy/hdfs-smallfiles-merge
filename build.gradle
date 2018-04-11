@@ -10,6 +10,16 @@ version = '1.0.0-SNAPSHOT'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+buildscript {   
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }   
+    dependencies {      
+           classpath("org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.6.2")       
+    }
+}
+
 jacocoTestReport {    
    reports {        
        xml.enabled true
