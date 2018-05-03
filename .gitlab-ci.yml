@@ -1,0 +1,49 @@
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  BASE_NAME: yarn-app
+  BUILD_OS_IMAGE: $CI_REGISTRY/pholio/docker-build-os:master.8016
+ 
+stages:
+  - build
+  - test
+  - sonar
+
+before_script:
+  - echo $BASE_NAME
+  - echo `pwd` # debug
+  - echo `whoami`
+  - echo "$CI_BUILD_NAME, $CI_BUILD_REF_NAME $CI_BUILD_STAGE" # debug
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+
+cache:
+    - .gradle/wrapper
+    - .gradle/caches
+
+build:
+  stage: build
+  image: ${BUILD_OS_IMAGE}
+  script:
+    - ./gradlew --build-cache clean zip
+  artifacts:
+    paths:
+      - build/libs/*.jar
+      - build/distributions/*.zip
+    expire_in: 1 week
+  only:
+    - master
+
+test:
+  stage: test
+  image: openjdk:8-jdk-alpine
+  script:
+    - ./gradlew --info check
+
+sonar:
+  stage: sonar
+  script:
+    - ./gradlew sonarqube
+  only:
+    - master
+  when: manual
+

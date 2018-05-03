@@ -1,0 +1,69 @@
+<coordinator-app name="${coordAppName}" frequency="${coord:days(1)}" start="${jobStart}" end="${jobEnd}"
+    timezone="UTC" xmlns="uri:oozie:coordinator:0.4">
+
+    <controls>
+        <timeout>0</timeout>
+        <concurrency>2</concurrency>
+    </controls>
+
+    <datasets>
+        <dataset name="din" frequency="${coord:days(1)}" initial-instance="${dinInitialInstance}" timezone="UTC">
+            <uri-template>${baseInputURI}/${YEAR}/${MONTH}/${DAY}</uri-template>
+            <done-flag></done-flag>
+        </dataset>
+        <dataset name="archived" frequency="${coord:days(1)}" initial-instance="${archivedInitialInstance}"
+            timezone="UTC">
+            <uri-template>${baseArchivedURI}/${YEAR}/${MONTH}/${DAY}</uri-template>
+            <done-flag></done-flag>
+        </dataset>
+        <dataset name="jobInfo" frequency="${coord:days(1)}" initial-instance="${jobInfoInitialInstance}"
+            timezone="UTC">
+            <uri-template>${baseJobInfoURI}/${YEAR}/${MONTH}/${DAY}</uri-template>
+            <done-flag></done-flag>
+        </dataset>
+    </datasets>
+    <input-events>
+        <data-in name="input" dataset="din">
+            <instance>${coord:current(-1)}</instance>
+        </data-in>  
+    </input-events>
+    <output-events>
+         <data-out name="archivedOutput" dataset="archived">
+                <instance>${coord:current(0)}</instance>
+         </data-out>
+          <data-out name="jobInfoOutput" dataset="jobInfo">
+                <instance>${coord:current(0)}</instance>
+         </data-out>
+    </output-events>
+    <action>
+        <workflow>
+            <app-path>${wfAppPath}</app-path>
+            <configuration>
+                <property>
+                    <name>jobTracker</name>
+                    <value>${jobTracker}</value>
+                </property>
+                <property>
+                    <name>nameNode</name>
+                    <value>${nameNode}</value>
+                </property>
+                <property>
+                    <name>queueName</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>inputDir</name>
+                    <value>${coord:dataIn('input')}</value>
+                </property>
+                <property>
+                    <name>archivedDir</name>
+                    <value>${coord:dataOut('archivedOutput')}</value>
+                </property>
+                <property>
+                    <name>jobInfoDir</name>
+                    <value>${coord:dataOut('jobInfoOutput')}</value>
+                </property>
+            </configuration>
+        </workflow>
+    </action>
+</coordinator-app>
