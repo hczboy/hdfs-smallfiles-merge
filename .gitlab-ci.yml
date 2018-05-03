@@ -1,3 +1,4 @@
+image: openjdk:8-jdk-alpine
 
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
@@ -23,7 +24,6 @@ cache:
 
 build:
   stage: build
-  image: ${BUILD_OS_IMAGE}
   script:
     - ./gradlew --build-cache clean zip
   artifacts:
@@ -36,7 +36,6 @@ build:
 
 test:
   stage: test
-  image: openjdk:8-jdk-alpine
   script:
     - ./gradlew --info check
 
