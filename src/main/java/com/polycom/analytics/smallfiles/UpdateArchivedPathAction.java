@@ -97,8 +97,8 @@ public class UpdateArchivedPathAction
         String[] fields = line.split(OUTPUTFILE_FIELDS_SEP);
         if (fields == null || fields.length != 2)
         {
-            log.error("the line:{} of {} not following format: [originalFilePath],[ArchivedFilePath]", line,
-                    SMALLFILESWRITE_OUTPUTFILE);
+            log.error("the line:{} of {} not following format: [originalFilePath]{}[ArchivedFilePath]", line,
+                    SMALLFILESWRITE_OUTPUTFILE, OUTPUTFILE_FIELDS_SEP);
             return null;
         }
         String fileID = extractFileIDFromPath(fields[0]);

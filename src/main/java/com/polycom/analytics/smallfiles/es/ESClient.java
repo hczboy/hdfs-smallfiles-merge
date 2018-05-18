@@ -332,11 +332,6 @@ public class ESClient implements Closeable
 
         private boolean isAllSucc = true;
 
-        public boolean isAllSucc()
-        {
-            return isAllSucc;
-        }
-
         @Override
         public void beforeBulk(long executionId, BulkRequest request)
         {

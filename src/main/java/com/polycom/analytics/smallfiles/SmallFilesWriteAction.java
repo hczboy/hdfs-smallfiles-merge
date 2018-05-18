@@ -1,5 +1,6 @@
 package com.polycom.analytics.smallfiles;
 
+import static com.polycom.analytics.smallfiles.shared.Constants.MAX_FILE_SIZE;
 import static com.polycom.analytics.smallfiles.shared.Constants.NAME_NODE;
 import static com.polycom.analytics.smallfiles.shared.Constants.OUTPUTFILE_FIELDS_SEP;
 import static com.polycom.analytics.smallfiles.shared.Constants.SMALLFILESWRITE_OUTPUTFILE;
@@ -18,11 +19,6 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.CodecFactory;
-import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.hadoop.file.SortedKeyValueFile;
 import org.apache.avro.hadoop.file.SortedKeyValueFile.Writer;
 import org.apache.commons.collections.CollectionUtils;
@@ -42,18 +38,19 @@ public class SmallFilesWriteAction
 
     private static final Logger log = LoggerFactory.getLogger(SmallFilesWriteAction.class);
 
-    private static final String FIELD_FILENAME = "filename";
+    /* private static final String FIELD_FILENAME = "filename";
     private static final String FIELD_CONTENTS = "contents";
-
+    
     private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"SmallFilesRecord\", "
             + "\"fields\": [" + "{\"name\":\"" + FIELD_FILENAME + "\", \"type\":\"string\"}," + "{\"name\":\""
             + FIELD_CONTENTS + "\", \"type\":\"bytes\"}]}";
-
+    
     private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
-
+    */
     private static FileSystem hdfs;
 
-    private static int maxfileSize;
+    private static int maxFileSize = 0;
+    private static final int DEFAULT_MAXFILESIZE = 10 * 1024 * 1024;
 
     /*    private static RestClient rClient;
     
@@ -82,7 +79,7 @@ public class SmallFilesWriteAction
 
                 fileLen = status.getLen();
 
-                if (fileLen > maxfileSize)
+                if (fileLen > maxFileSize)
                 {
                     if (overSizeFiles == null)
                     {
@@ -103,7 +100,7 @@ public class SmallFilesWriteAction
 
             if (overSizeFiles != null)
             {
-                log.info("over size[{} bytes] files: {}", maxfileSize, overSizeFiles);
+                log.info("over size[{} bytes] files: {}", maxFileSize, overSizeFiles);
             }
         }
         catch (IOException e)
@@ -123,15 +120,15 @@ public class SmallFilesWriteAction
         }
     }
 
-    private static void writeToAvro(Path srcDir, Path destFile) throws IOException
+    /* private static void writeToAvro(Path srcDir, Path destFile) throws IOException
     {
         @SuppressWarnings("resource")
-
+    
         DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).setSyncInterval(8192);
-
+    
         writer.setCodec(CodecFactory.snappyCodec());
         OutputStream os = null;
-
+    
         try
         {
             os = hdfs.create(destFile);
@@ -147,9 +144,9 @@ public class SmallFilesWriteAction
             for (FileStatus status : statuses)
             {
                 p = status.getPath();
-
+    
                 fileLen = status.getLen();
-
+    
                 if (fileLen > maxfileSize)
                 {
                     if (overSizeFiles == null)
@@ -160,13 +157,13 @@ public class SmallFilesWriteAction
                 }
                 else
                 {
-
+    
                     in = hdfs.open(p);
                     bos = new ByteArrayOutputStream((int) fileLen);
                     IOUtils.copyBytes(in, bos, 4096, true);
                     record = new GenericData.Record(SCHEMA);
                     record.put(FIELD_FILENAME, p.getName());
-
+    
                     record.put(FIELD_CONTENTS, ByteBuffer.wrap(bos.toByteArray()));
                     writer.append(record);
                     writtenToAvroFilesList.add(p);
@@ -179,19 +176,19 @@ public class SmallFilesWriteAction
         }
         catch (IOException e)
         {
-
+    
             log.error("Unexpected IOException in writeToAvro, srcDir:{}, destFile: {}", srcDir, destFile, e);
             throw e;
-
+    
         }
         finally
         {
             IOUtils.cleanup(null, writer);
             IOUtils.cleanup(null, os);
-
+    
         }
-
-    }
+    
+    }*/
 
     public static void writeArchivedFilePathsToFile(Path outputFile, Path destFile) throws IOException
     {
@@ -230,8 +227,33 @@ public class SmallFilesWriteAction
     {
         Configuration config = new Configuration();
         String nameNode = System.getProperty(NAME_NODE);
+        String maxFileSizeStr = System.getProperty(MAX_FILE_SIZE);
         hdfs = FileSystem.get(new URI(nameNode), config);
-        maxfileSize = 5 * 1024 * 1024;
+        if (maxFileSizeStr != null)
+        {
+            try
+            {
+                maxFileSize = Integer.valueOf(maxFileSizeStr).intValue();
+                if (maxFileSize <= 0)
+                {
+                    maxFileSize = DEFAULT_MAXFILESIZE;
+                    log.warn("value of property[{}] should >0, but is {}, apply default value: {}", MAX_FILE_SIZE,
+                            maxFileSize, DEFAULT_MAXFILESIZE);
+                }
+            }
+            catch (NumberFormatException e)
+            {
+
+                log.error("value of property[{}] should be integer, but is {}, apply default value: {}",
+                        MAX_FILE_SIZE, maxFileSizeStr, DEFAULT_MAXFILESIZE);
+
+                maxFileSize = DEFAULT_MAXFILESIZE;
+            }
+        }
+        else
+        {
+            maxFileSize = DEFAULT_MAXFILESIZE;
+        }
     }
 
     /*private static void initEsClient()
@@ -258,7 +280,7 @@ public class SmallFilesWriteAction
         client = new RestHighLevelClient(rClient);
     
     }*/
-    public static void clean()
+    private static void clean()
     {
         if (hdfs != null)
         {
@@ -281,7 +303,7 @@ public class SmallFilesWriteAction
         System.setProperty("HADOOP_USER_NAME", "hdfs");
         //System.setProperty("hadoop.home.dir", "/");
 
-        System.setProperty(NAME_NODE, "hdfs://plcmhdfsservice");
+        // System.setProperty(NAME_NODE, "hdfs://plcmhdfsservice");
 
         try
         {
