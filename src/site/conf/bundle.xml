@@ -1,0 +1,11 @@
+<bundle-app name='smallfiles-process-bundle' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns='uri:oozie:bundle:0.2'>
+          <coordinator name="${sfmCoordAppName}">
+                 <app-path>${jobPath}/sfm-coordinator.xml</app-path>
+                 
+          </coordinator>
+          <coordinator name="${sfrCoordAppName}">
+                 <app-path>${jobPath}/sfr-coordinator.xml</app-path>
+                 
+          </coordinator>
+          
+</bundle-app>

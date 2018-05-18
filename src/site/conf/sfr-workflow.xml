@@ -1,4 +1,4 @@
-<workflow-app xmlns='uri:oozie:workflow:0.4' name="${wfAppName}">
+<workflow-app xmlns='uri:oozie:workflow:0.4' name="${sfrWfAppName}">
 
     <global>
         <job-tracker>${jobTracker}</job-tracker>
@@ -12,29 +12,27 @@
         </configuration>
     </global>
 
-    <start to='smallfilesWrite' />
+    <start to='smallfilesPurge' />
 
-    <action name='smallfilesWrite'>
+   <action name='smallfilesPurge'>
         <java>
 
-            <prepare>
-                <delete path="${archivedDir}" />
-                <delete path="${jobInfoDir}" />
-            </prepare>
+           
 
-            <main-class>com.polycom.analytics.smallfiles.SmallFilesWriteAction</main-class>
+            <main-class>com.polycom.analytics.smallfiles.purge.SmallFilesPurgeAction</main-class>
             <java-opts>-Xmx256m -DnameNode=${nameNode}</java-opts>
-            <arg>${inputDir}</arg>
-            <arg>${archivedDir}/${wf:name()}_${wf:id()}</arg>
-            <arg>${jobInfoDir}/${wf:name()}_${wf:id()}.smallfilesWrite</arg>
-            <capture-output />
+            <arg>${startDateInclusive}</arg>
+            <arg>${endDateExclusive}</arg>
+            <arg>${baseJobInfoURI}</arg>
+            <arg>${suffixSmallfilesWrite}</arg>
+            <arg>${jobSuccIndicatorFile}</arg>
         </java>
-        <ok to="updateArchivedPath" />
+        <ok to="end" />
         <error to="fail" />
     </action>
 
 
-    <action name='updateArchivedPath'>
+    <!--  <action name='updateArchivedPath'>
         <java>
 
             <configuration>
@@ -48,12 +46,20 @@
             <java-opts>-Xmx256m -DesHosts=${esHosts} -DnameNode=${nameNode}</java-opts>
             <arg>${wf:actionData('smallfilesWrite')['smallfilesWriteOutputFile']}</arg>
         </java>
-        <ok to="end" />
+        <ok to="placeSuccFlagFile" />
         <error to="fail" />
-    </action>
+    </action> -->
+    
+   <!--  <action name="placeRemoveFlagFile">
+        <fs>
+            <touchz path="${nameNode}/user/${userName}/_removed"/>
+        </fs>
+         <ok to="end"/>
+         <error to="fail"/>
+    </action> -->
 
     <kill name="fail">
-        <message>java failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+        <message>something failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
     </kill>
     <end name='end' />
 </workflow-app>

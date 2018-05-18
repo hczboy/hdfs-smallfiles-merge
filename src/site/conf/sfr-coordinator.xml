@@ -1,43 +1,36 @@
-<coordinator-app name="${coordAppName}" frequency="${coord:days(1)}" start="${jobStart}" end="${jobEnd}"
+<coordinator-app name="${sfrCoordAppName}" frequency="${coord:days(7)}" start="${sfrJobStart}" end="${sfrJobEnd}"
     timezone="UTC" xmlns="uri:oozie:coordinator:0.4">
 
     <controls>
-        <timeout>0</timeout>
+        <!-- <timeout>0</timeout> -->
         <concurrency>2</concurrency>
     </controls>
 
-    <datasets>
-        <dataset name="din" frequency="${coord:days(1)}" initial-instance="${dinInitialInstance}" timezone="UTC">
-            <uri-template>${baseInputURI}/${YEAR}/${MONTH}/${DAY}</uri-template>
-            <done-flag></done-flag>
-        </dataset>
-        <dataset name="archived" frequency="${coord:days(1)}" initial-instance="${archivedInitialInstance}"
-            timezone="UTC">
-            <uri-template>${baseArchivedURI}/${YEAR}/${MONTH}/${DAY}</uri-template>
-            <done-flag></done-flag>
-        </dataset>
+  <!-- <datasets>
+        
         <dataset name="jobInfo" frequency="${coord:days(1)}" initial-instance="${jobInfoInitialInstance}"
             timezone="UTC">
             <uri-template>${baseJobInfoURI}/${YEAR}/${MONTH}/${DAY}</uri-template>
-            <done-flag></done-flag>
+            <done-flag>${jobSuccIndicatorFile}</done-flag>
         </dataset>
     </datasets>
     <input-events>
-        <data-in name="input" dataset="din">
-            <instance>${coord:current(-1)}</instance>
+        <data-in name="input" dataset="jobInfo">
+            <start-instance>${coord:current(-13)}</start-instance>
+            <end-instance>${coord:current(-7)}</end-instance>
         </data-in>  
     </input-events>
-    <output-events>
+     <output-events>
          <data-out name="archivedOutput" dataset="archived">
                 <instance>${coord:current(0)}</instance>
          </data-out>
           <data-out name="jobInfoOutput" dataset="jobInfo">
                 <instance>${coord:current(0)}</instance>
          </data-out>
-    </output-events>
+    </output-events> -->
     <action>
         <workflow>
-            <app-path>${wfAppPath}</app-path>
+            <app-path>${jobPath}/sfr-workflow.xml</app-path>
             <configuration>
                 <property>
                     <name>jobTracker</name>
@@ -52,17 +45,21 @@
                     <value>${queueName}</value>
                 </property>
                 <property>
-                    <name>inputDir</name>
-                    <value>${coord:dataIn('input')}</value>
+                    <name>startDateInclusive</name>
+                    <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(), -14, 'DAY'), "yyyy/MM/dd")}</value>
                 </property>
                 <property>
+                    <name>endDateExclusive</name>
+                    <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(), -7, 'DAY'), "yyyy/MM/dd")}</value>
+                </property>
+               <!--  <property>
                     <name>archivedDir</name>
                     <value>${coord:dataOut('archivedOutput')}</value>
                 </property>
                 <property>
                     <name>jobInfoDir</name>
                     <value>${coord:dataOut('jobInfoOutput')}</value>
-                </property>
+                </property> -->
             </configuration>
         </workflow>
     </action>

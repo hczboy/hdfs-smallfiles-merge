@@ -1,0 +1,67 @@
+<workflow-app xmlns='uri:oozie:workflow:0.4' name="${sfmWfAppName}">
+
+    <global>
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+        <configuration>
+            <property>
+                <name>mapred.job.queue.name</name>
+                <value>${queueName}</value>
+            </property>
+
+        </configuration>
+    </global>
+
+    <start to='smallfilesWrite' />
+
+    <action name='smallfilesWrite'>
+        <java>
+
+            <prepare>
+                <delete path="${archivedDir}" />
+                <delete path="${jobInfoDir}" />
+            </prepare>
+
+            <main-class>com.polycom.analytics.smallfiles.SmallFilesWriteAction</main-class>
+            <java-opts>-Xmx512m -DnameNode=${nameNode} -DmaxFileSize=${maxFileSize}</java-opts>
+            <arg>${inputDir}</arg>
+            <arg>${archivedDir}/${wf:name()}_${wf:id()}</arg>
+            <arg>${jobInfoDir}/${wf:name()}_${wf:id()}${suffixSmallfilesWrite}</arg>
+            <capture-output />
+        </java>
+        <ok to="updateArchivedPath" />
+        <error to="fail" />
+    </action>
+
+
+    <action name='updateArchivedPath'>
+        <java>
+
+            <configuration>
+
+                <property>
+                    <name>oozie.launcher.mapreduce.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+            </configuration>
+            <main-class>com.polycom.analytics.smallfiles.UpdateArchivedPathAction</main-class>
+            <java-opts>-Xmx256m -DesHosts=${esHosts} -DnameNode=${nameNode}</java-opts>
+            <arg>${wf:actionData('smallfilesWrite')['smallfilesWriteOutputFile']}</arg>
+        </java>
+        <ok to="placeSuccFlagFile" />
+        <error to="fail" />
+    </action>
+    
+    <action name="placeSuccFlagFile">
+        <fs>
+            <touchz path="${jobInfoDir}/${jobSuccIndicatorFile}"/>
+        </fs>
+         <ok to="end"/>
+         <error to="fail"/>
+    </action>
+
+    <kill name="fail">
+        <message>something failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name='end' />
+</workflow-app>
