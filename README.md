@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Introduction:
     this project aims to implement a way to merge small files in HDFS into one Avro file daily (plus update the Avro file path to ElasticSearch)and remove small files that are have been merged automatically and periodically
      
@@ -18,7 +17,3 @@ How to run it:
     4. run "hdfs dfs -put oozie oozie" to copy dir "oozie" to hdfs  
     5. run "oozie job --oozie http://hanalytics-ambari-master-scus-3.analytics.azure.local:11000/oozie -config oozie/smallfiles-process/job.properties -doas hdfs -run" to launch the Oozie bundle job(which would manage two coordinator jobs(one for small files merge and the other for small files removal))
     Note: -doas hdfs means job submission as user hdfs, since user "hdfs" has the permission for the paths of the small files
-=======
-# hdfs-smallfiles-merge
-this project aims to implement a way to merge small files in HDFS into one Avro file daily (plus update the Avro file path to ElasticSearch)and remove small files that are have been merged automatically and periodically
->>>>>>> 2665672724dfe148d82ddb200e0c974cb07ec62b
